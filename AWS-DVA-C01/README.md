@@ -235,4 +235,51 @@ Securtiy gruops act like firewall on EC2 instances.
 ### Site-to-Site VPN and Direct Connect(DX)
 - Site to site VPN connect an on-premise VPN to AWS, goes over public internet 
 - DX, establish a physical connection between on-premise and AWS, connection is private, tkes at least a month to establish 
-
+## S3
+## AWS CICD
+### CodeCommit
+- Version control
+- No size limit on repositories
+- Authentication
+  - SSH keys, HTTP(with AWS CLI Credential Helper or Git Credentials for IAM user) 
+- Authorization : IAM policies to manage uers/roles permissiont to repositories 
+- Cross account access : Use AWS STS's assumeRole, do not share ssh keys or aws credentials  
+### CodePipleine
+- Build, Test, Deploy etc 
+### CodeBuild
+- Fully managed service, charged per minute for compute resources
+- Runs instructions from buildspec.yml 
+- buildspec.yml
+  - Must be at the root of your code 
+  - env 
+   - Variables : Plaint text variables
+   - parameter-store : variables stored in SSM Parameter Store
+   - secrets-manager : Variable stored in AWS Secrets Manager 
+  - phases
+  - artifcats
+  - cache
+- Leverage CodeBuild Agent for running and troubleshooting locally 
+- CodeBuild cannot access resources in a VPC
+### CodeDeploy 
+- Each EC2 instance/onpremises server must be running the CodeDeply Agent
+- appspec.yml is pulled from S3
+- EC2 instance will run the deployment instructions in appspec.yml 
+- Configurations
+  - One At a Time : Once EC2 instance at a time, if one instance fails then deployment stops
+  - Half At a TIme
+  - All at Once 
+  - Custom 
+- Failures: 
+  - EC2 instances stay in FAILED state
+  - New deployments will first be deployed on failed instances
+  - To rollback, redeploy old deployment or enable automated rollback for failures 
+  - If a rollback happens, CodeDeploy redeploys the last known good revision as a new deployment not a restored version 
+### CodeStar
+- An integrated solution that groups: GitHub, CodeCommit, CodeBuild, CodeDeploy, CloudFormation, CodePipleine, CloudWatch etc 
+- Free service, limited customization
+### CodeArtifact 
+- Artifactory like service
+### CodeGuru
+- An ML powered service for automated code reviews and application performance recommendations 
+- Provides two functionalities. CodeGuru Reviewer(development), Code Guru Profiler(Production)
+## CloudFormation
