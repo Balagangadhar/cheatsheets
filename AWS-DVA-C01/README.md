@@ -236,6 +236,7 @@ Securtiy gruops act like firewall on EC2 instances.
 - Site to site VPN connect an on-premise VPN to AWS, goes over public internet 
 - DX, establish a physical connection between on-premise and AWS, connection is private, tkes at least a month to establish 
 ## S3
+TBD
 ## AWS CICD
 ### CodeCommit
 - Version control
@@ -283,3 +284,4 @@ Securtiy gruops act like firewall on EC2 instances.
 - An ML powered service for automated code reviews and application performance recommendations 
 - Provides two functionalities. CodeGuru Reviewer(development), Code Guru Profiler(Production)
 ## CloudFormation
+TBD
