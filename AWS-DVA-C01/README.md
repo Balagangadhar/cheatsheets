@@ -285,3 +285,77 @@ TBD
 - Provides two functionalities. CodeGuru Reviewer(development), Code Guru Profiler(Production)
 ## CloudFormation
 TBD
+## Security & Encryption 
+- Encryption in flight
+- Server side encryption at rest
+- Client side encryption 
+  - Data is encrypted by the client and never decrypted by the server and decrypted by a receiving client 
+  - Could leverage Envelope Encryption 
+ ### Key Management Service(KMS) 
+ - Anytime you hear encryption for an AWS service, its most likely KMS 
+ - AWS manages encrption keys for us
+ - Fully integrated with IAM for authorization
+ - Easy way to control access to your data
+ - Able to audit KMS key usage using CloudTrail 
+ - There are three types of KMS keys
+   - AWS managed key : free, automatic key rotation every 1year
+   - Customer Managed Keys(CMK) created in KMS: 1$/month, must be automatic  every 1 year
+   - Customer Managed Keys imported(Must be 256-bit symmetric key) : 1$/month , only manual rotation possibel using alias
+  - Pay for API call to KMS
+  -  
+ #### KMS Keys Types  
+ KMS Keys is the new name for KMS Customer Master Key
+ - Symmetric(AES-256 keys) 
+   - Single encryption key that is used to Encrypt and Decrypt
+   - AWS services that are integrated with KMS use Symmetric CMKs
+   - YOu never get access to the KMS  key unencrypted, must call KMS API to use
+ - Asymmetric(RSA & ECC key pairs) 
+   - Public and private key pair 
+   - Used for Encrypt/Decrypt or Sign/Verify operation
+   - Used for encryption outside of AWS by users who can't call the KMS API 
+#### Envelope Encryption
+- KMS Encrypt API call has a limit of 4 KB, Client Side Encryption and Decryption using DEK 
+- If you want to encrypt > 4KB, you need to use Envelope Encryption
+- The main API that will help is GenerateDataKey API 
+- Data key can be cached instead of creating new ones for each encryption  
+- Use LocalCryptoMaterialsCache
+#### KMS Request Quotas
+- When you exceed a request quora, you get a ThrottlingException
+- To respond, use exponential backoff
+- This includes requests made by AWS on your bahalf(eg. SSE-KMS) 
+- YOu can request a Request Quotas increase through API or AWS support 
+#### Copying Snapshots accross regions  
+- EBS Volumne Encrypted with KMS
+- EBS Snapshot Encrypted with KMS 
+- KMS ReEncrypt with KMS Key B 
+- EBS Snapshot Encrypted with KMS Key B
+- EBS Volum Encrypted with KMS Key B
+#### Copying Snapshots accross accounts   
+- Create a snapshot, encrypted with your own KMS key CMK
+- Attach a KMS Key policy to authorize cross-account access
+- Share the encrypted snapshot
+- In Target, create a copy of the snapshot, encrypt it with CMD in your account 
+- Create a volume from the snapshot 
+#### S3 Encryption for Objects
+- There are 4 mthods of encrypting Objects in S3
+  - SSE-S3 : Encrypts S3 objects using keys handled & managed by AWS
+  - SSE-KMS : Leverage AWS Key Management Service to manage encryption keys 
+  - SSE-C: When you want to manage your own ecryption keys
+  - Client Side Encryption 
+### SSM Parameter Store
+- Secure storage for configuration and secrets
+- Serverless, scalable, durable, easy SDK, version tracking of configuration/secrts
+- Security through IAM, notifications with Amazon EventBridge
+- Integration with CloudFormation 
+- Standard is 10000 max, 4kb size, free
+- Advanced 10,000, 8kb size, charges apply 
+### AWS Secrets Manager
+- Meant for storing secrets
+- Capability to force rotation of secrets every X days 
+- Automate generation of secrets on rotation(uses Labda) 
+### CloudWatch Logs - Encryption
+- Encryption is enabled at the log group level, by associating a CMK with a log group
+- You must use the CloudWatch Logs API
+  - associate-kms-ke : if the log group alredy exists
+  - create-log-group : if the log group doesnt exist yet
+- 
