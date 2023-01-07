@@ -1,7 +1,7 @@
 ## AWS Regions
 - AWS has the concept of a Region, which is a physical location around. It is a cluster data centers
 - Sample region names can be us-east-1
-- Each region has many availability zones(AZ), min 3, max 6
+- Each region has many availability zones(AZ), min 2, max 6
 - AZ is represented by an AWS Region code followed by a letter identifier (for example, us-east-1a)
 - AWS has 216 points of presense
 ## AWS Global Services
@@ -120,5 +120,119 @@ Securtiy gruops act like firewall on EC2 instances.
 - Compatible only with Linux based AMI not windows 
 - No capacity planning required, scales automatically 
 - Higher pricing point than EBS 
+## Scalabilty & High Availability 
+- Vertically scalability means increasing size of the instance for eg. t2.micro to t2.large. Eg systems RDS, ElastiCache can scale veritically 
+- Horizontal Scalability means increasing the number of instances, it implies distributed systems
+### Elastic Load Balancer 
+- Managed load balancer
+- There are 4 types of load balancers 
+#### Classic Load Balancer 
+- Supports TCP(Layer ), HTTP & HTTPS(Layer 7) 
+- Health checks are TCP or HTTP based 
+- Fixed hostname 
+- Cookie name is AWSELB  
+- Cross zone load balancing(Equally balancing across all AZs) is disabled by default. No charges for inter AZ data if enabled
+- Supports only one SSL, must use multiple CLB for multiple hostname with multiple SSL certicates 
+#### Application Load Balancer
+- Layer 7
+- Supports Http/2 and websocket and also redirects  
+- Can rounte based on path, hostname, query string, header 
+- Great for container based applications(Like Docker, ECS) 
+- Target couprs are EC2 instances, ECS tasks, Lambda functions, private ip addresses 
+- Application servers don't see the ip of the client directly. Use X-FOrwarded-For header for that. X-Forwarded-Port, proto for port and protocal 
+- Cookie name is AWSALB
+- Cross zone load balancing(Equally balancing across all AZs) is enabled by default. No charges for inter AZ data if enabled
+- Old Gen
+- Supports multiple listeners, uses SNI(Server Name Indication) for hostname with multiple SSL certificates 
+#### Network Load Balancer 
+- Layer4
+- Used for extreme perforamnce
+- Target groups : EC2, private IP addresses, ALBs 
+- Cross zone load balancing(Equally balancing across all AZs) is disabled by default. Incor charges for inter AZ data if enabled
+- Supports multiple listeners, uses SNI(Server Name Indication) for hostname with multiple SSL certificates 
+#### Gateway Load Balancer
+- Operates at Layer 30 ip pockets 
+- Target groups EC2 and private ips 
+### Auto Scaling Group(ASG) 
+- Scales out(Add EC2 instances) Scales in(remove EC2 instances) 
+- Automatically register new instances to load balancer 
+- ASG are free(Only pay for underlying EC2 instances) 
+- Attributes
+  - Launch template( With which EC2 should be launched, it has ami type, ec2 user data, ebs volumes, ssh etc) 
+  - Mini Size, Max Size, Initial Capacity 
+  - Scaling Policies 
+- Metrics such as avg CPU are computed for the overall ASG instances 
+- Dynamic Scaling 
+  - Target Tracking Scaling : Eg. average ASG CPU to stay around 40$
+  - Step Scaling : Eg. When alrm is triggered then add 2 units 
+  - Scheduled Actions : Increase min capacity to 10 at 3pm on Fridays
+- Predictive Scaling : Forecast load and schedule
+- Good metrics to scale on are CPUUtilization, RequestCountPerTarget, Average Network In/Out etc 
+- Scaling Cooldowns 
+  - After scaling activity happens, you are in the cooldown period(Default 300 seconds) 
+  - During cooldown perios ASG will not launch or terminate additional instances 
+  - Use ready to use AMI to redue configuration time in order to be serving request faster and reduce cooldown period 
+## Database Services
+### RDS
+- Managed Service
+- Can't SSH into RDS instances 
+- Increase storage dynamically(You have to set Maximum Storage Threshold) 
+### RDS Read Replicas
+- Up to 5 read replicas, within AZ, Cross AZ or Cross Region
+- Replication is Async so reads are eventually consistent 
+- Applications must update the connection string to leverage read replics 
+- In AWS data goes from one az to another, there is a network cost but for RDS read replicas within region is free 
+## Aurora
+-  AWS proprietary technology(Not open sourced), costlier than RDS  
+-  Both postgres and mysql are supported as Aurora DB 
+-  AWS cloud optimized 
+-  Storage automaticcally grows in increments of 10GB up to 128 TB 
+-  Can have 15 replicas 
+### ElastiCache
+- Managed Redis or Memcached
+- Caches are in-memory with really high perofrmance and low latency 
+- Using ElastiCache involves heavy application code changes
+- Do not support IAM authentication 
+- Data is partitioned across shards 
+## Route 53 Section 
+- DNS and domain registrar
+- DNS record types
+  - A : Maps a hostname to IPv4
+  - AAAA : Maps a hostname to IPv6
+  - CNAME : Maps a hostname to another hostname, target hostname must have A or AAAA record, can t create CNAME for top nodes(eg. cang create eg.com but www.eg.com is possible) 
+  - NS : Name Servers for the hosted zone , control how traffic is routed for a domain 
+  - Other advanced record types like SRV etc 
+-  Hosted Zones 
+  - A container for records that defned how to route traffic to a domaon and its sub domains 
+  - Public Hosted Zones : Contains records that specific how to route traffic on the internet 
+  - Private HOsted Zone 
+  - $.50 per month per hosted zone 
+- Alias Records
+  - TTL mandatory for each DNS except Alias records 
+  - You cannot set an alias recordfor an EC2 DNS name 
+- Routing policies 
+  - Simple, weighted, failover, latency based, geolocation, multi-value answer, geoproximity
 
+## VPC  
+- Private network to deploy resources. 
+- Subnets allow you to partition your network inside VPC, pubcli and private subnets are available. 
+- To define access to the internet and between subnets we use Route Tables
+- Internet Gateways help VPC instances connect with internet 
+- NAG gateways(AWS managed) and NAT instances (Self managed) allow your instances in your private subnets to access the internet while remainign private   
+### Network ACL
+- A firewall which controls traffic from and to subnet
+- Can have ALLOW and DENY rules
+- Are attached at the subnet level 
+- Rules only include IP addresses
+- Stateless, return traffic must be explicitely allowed by rules 
+### VPC Flow Logs 
+- Capture information about IP traffic going into your interfaces, VPC Flow Logs, Subnet Flow Logs, Elastic Network Interface Flow Logs
+### VPC Peering
+- Connect two VPC, privately using AWS network 
+- Make them behave as if they were in the same network
+- Must not have overlapping CIDR(IP address range) 
+- VPC Peering connection is not transtive 
+### Site-to-Site VPN and Direct Connect(DX)
+- Site to site VPN connect an on-premise VPN to AWS, goes over public internet 
+- DX, establish a physical connection between on-premise and AWS, connection is private, tkes at least a month to establish 
 
