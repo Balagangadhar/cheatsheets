@@ -532,3 +532,46 @@ TBD
 ### Security & other features
 - Security : Encryption at rest using AWS KMS and in-transit using SSL/TLS
 - DynamoDB Local : Develp and test apps locally without accessing DynamoDB 
+## AWS Cognito
+### Cognito User Pools
+- Sign in functionality for app suers
+- Integrate with API Gateway & ALB
+- User directory
+- Manage User/pwd
+### Cognito Identity Pools
+- Federated identity
+- Temporary access to AWS resource directly
+- Access AWS services
+### Cognito Sync
+- Sync data from device to Cognitoy(Even offline and sync it once device is online)
+- Deprecated and replaced by AppSync
+### Cognito over IAM
+- Hundres of users
+- Mobile Users
+- Authenticate with SAML
+
+## Other Sections
+### AWS Step Functions
+- Workflows as state machines
+- Written in JSON 
+### APPSYnc
+- Managed serve that uses GraphQL
+### STS - Security TOken Service
+- Allows to grant limited and temporary access to AWS resource(up to 1 hour) 
+- AssumeRole : WIthing yor accour or cross account
+### Redshift
+- OLAP - Analytic Processing
+- DAa warehousing, analytic queries
+### Neptune
+- Graphe Database
+### DocumentDB 
+- Managed MongoDB for AWS 
+### AWS Certificate Manager(ACM)
+- Lets you easily proviion, manage and deploy SSL/TLS certificates
+- Used to provide in-flight encryption for websites
+- Free of charge for public TLS certificates
+- Automatic TLS certificate renewwal
+### AWS Cloud Map
+- Fully managed resource discovery service 
+### AWS Fault Injection SImulator(FIS)
+- Managed service for running fault injection experiments on AWS workloads
