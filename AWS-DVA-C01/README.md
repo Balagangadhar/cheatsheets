@@ -366,7 +366,7 @@ TBD
 - Results are returned right away
 - Error handling must happen at client side(retries, exponential backoff etc...)
 - Lambda@Edge : Implement request filtering before reaching your application
-### Lambda - Asynchronouse Invocation
+### Lambda - Asynchronous Invocation
 - S3, SNS, CloudWatch Events
 - Events are placed in an Event Queue
 - Lambda attempts to retry on errors
