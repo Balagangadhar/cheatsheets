@@ -379,11 +379,11 @@ TBD
 - Grants the Lambda function permissions to AWS services, sample managed policies for Lambda: AWSLambdaBasicExecutionROle : Upload logs to CloudWAtch, AWSLambdaKinessExecutionROle : Read from Kinesis
 - Best practice: Create one Lambda Execution role per function 
 - BY default, lambda function is launched outside your own VPC, hence it cannot access resources in your VPC, you must define VPC ID, subnet and security groups. Role : AWSLambdaVPCAccessExecutionROle 
-- Lambda FUnction COfnigruation :RAM
+- Lambda FUnction Cofnigruation :RAM
   - 128MB to 10GB in 1MB increments
   - The more RAM, more vCPU you get
   - Default timeout is 3 seconds, max is 900 sec or 15 min 
-- Lambda Execution Context
+### Lambda Execution Context
   - Temporary runtime environment, great for database connections, https clients, sdk clients
   - Execution context includes /tmp director 
   - Initialize outside the handler
@@ -391,7 +391,7 @@ TBD
   - If Lambda needs to download a bigfilre to work, you can use /tmp 
   - Max size is 10GB 
   - FOr permanenet persistence of object, use s3
-- Lambda Concurrentcy and Throttling
+### Lambda Concurrentcy and Throttling
   - Limit 1000 concurrent executions
   - Can set a reserved concurrency, each invocation over the reserved limit, triggers a Throttle
   - If synchronouse invocation : throttle returns ThrottleError - 429 
@@ -401,39 +401,134 @@ TBD
  - Cold Starts & Provisioned Concurrency 
   - Cold Start : Code is loaded and code ouside the handler run, if the init is large, it can take some time, hence first request server by new instances have higher latency than the rest 
   - Provisioned Concurrency : Concurrency is allocated before the function is invocated, so the cold start never happens and all invocations have low latency 
-- Lambda FUnction Dependencies
+### Lambda Function Dependencies
   - If lamdba depends on externa libraries, need to install packages alongside your code and zit it together
   - Upload the zip to lambda if less than 50MB else to S3 first
   - AWS SDK comes by default with every Lambda function 
-- Lambda and CloudFormation - inline 
+### Lambda and CloudFormation - inline 
   - Use Code.ZipFIle property for inline code 
   - You cannot include function dependencies with inline functions 
-- Lambda and CloudFormation through S3
+### Lambda and CloudFormation through S3
   - Store Lambda zip in s3, must refer s3 zip location in CloudFormation code under code.S3Bucket, Code.S3Key, Code.S3ObjectVErsion
-- Lambda Layers
+### Lambda Layers
   - An archive containing additional code, such as libraries, dependencies, or even custom runtimes
-- Lambda Container Images
+### Lambda Container Images
   - Deploy Lambda function as container images of up to 10GB from ECR
   - Can create your own image as long as it implements the Lambda RUntime API 
   - Test the containers locally using th Lambda RUntime Interface EMulator
-- Lambda Versions
+### Lambda Versions
   - When yo work on a Lambda function, it will be on $LATEST
   - When we're ready to publish a Lambda funciton, we create a version
   - Versions are immutable
   - Versions have increasing version numbers and they get their own ARC(Amazon Resource Name) 
   - Version = Code+COnfiguration(Nothing can be changed- immutable) 
   - Each version of the Lambda function can be accessed
- - Lambda Aliases
+### Lambda Aliases
    - Aliases are points to Lambda function verions 
    - We can define dev, test, prod aliases have them point at different lambda versions
    - Aliases are mutable
    - Alisases enable Blue/Green deployment by assigning weghts to Lambda functions
    - Aliases cannot reference aliases 
-- Lambda & CodeDeploy 
+### Lambda & CodeDeploy 
   - CodeDeploy can help automatic traffic shift for Lambda aliases 
   - Feature is integrated within the SAM framework 
   - Linear, Canary, AllAtOnce
- - Best practices
+### Best practices
    - Connec to databses or initialize SDK, pull dependencies outside of your function handler
    - Minized deployment package size, use layers where necessary
    - Avlid using recursive code, never have a Lambda function call itself 
+
+## DynamoDB 
+- Fully managed, highly available with replication accross multiple AZs
+- Each table has primary key and can have infinite number of items(rows)
+- Max size of an item is 400KB
+- Primary Keys(partitione Key: HASH or Paritione Key + Sort Key(Hash + RANGE) eg. composite key impl 
+### Read/Write Capacity Modes(RCU,WCU)
+- Proviioned Mode(default)
+  - Specific number of reads/writes per second
+  - Need to plan capacity before hand
+  - Throughput can be exceeded temporarily using Burst Capacity
+  - If Burst Capacity has been consumed, you get a ProvisionedThroughputExceededException, then its advised to do an exponential backoff retry
+- On-Demand Mode
+  - Read/writes automatically scale up/down
+  - No palnning requried but more expensive
+ - You can switch between different modes once every 24 hours
+ ### Write Capacity Units(WCU)
+   - One WCU represents one write per second for an item up to 1KB 
+   - Eg: We write 10 items per secon wth size 2kb then 10*(2kb/1kb) = 20 WCUs
+ ### Read Capacity Units(RCU)
+  Consistent Read
+  - Strongly consistent : If we read just after a write, we get correct data, set consisten read to true, consumes twice RCU
+  - Eventually Consistent Read(Default) : If we read just after write, we may get stale data because of replication
+  - One RCU represents 1 strongly consistent or 1 eventually consistent reads per seconf for item utp 4KB 
+  - Eg : 10 strongly consistent reads per secon with item size 4KB, 10*(4KB/4KB) = 10 RCUs
+  - Eg : 10 Strongly Consistent Reads per second, with item size 6 KB  then 10* 1*(8kb 6kb is round off up to 8kb)/(4kb) = 20 RCUs
+### Partiioneds Internal
+- Data is stored in partiiones
+- Paritione Kyes go through a hashing al to know which parition they go to 
+- WCUs and RCUs are spread evenly across paritions
+### DynamoDB Throttling
+- If we exceed proviioned RCUs or WCUs we get ProvionedThroughputExceededException
+- Reasons : Hot Keys(one parition key is being read too many times), Hot Paritiones, Very large items
+- Solutions : Exponential backoff(already in SDK), Distribute paritione keys as much as possibel, if RCU issue, we can use DynamoDB Accelerator(DAX)
+### Read/Write Capacity Modes - On-Demand
+- Automatic read/write scal up/down 
+- No capacity palnning needed
+- No throttle, 2.5X more expensive
+- Read Request Units,Write Requst Units
+### DynamoDB - Writing Data
+- PutItem : Creates a new item or fully replace old item : Consumes WCUs
+- UpdateItem : Edits existing items attribute or adds new item if doesn't exist 
+- ConditonaWrites : Accept a write/update/delete only if conditions are met
+### DynamoDB - Reading Data
+- Read based on Primary key
+- ProjectionExpression can be specified to retrieve only certain attributes
+- Query(based on filter expression), scan(Entire table) 
+### DynamoDB - Deleting Data
+ - DeleteItem : Deletes an indiviual item
+ - DEleteTable : Deletes a whole table and its items, quicker than deleteItem on all items
+### DynamoDB - Batch Operations
+- BatchWriteItem : Up to 25 put or delete items, can t updateitem
+- BatchGetItem : Returns items 
+### Secondary Indices
+- Local Secondary Index(LSI)
+  - Alternative soft key for table
+  - Up to 5 local secondary
+  - Must be defined at table creation time
+- Global Secondary Index(GSI)
+  - Can be added after table creation
+  - If the writes are throttles on the GSI, then main table will be throttled, even if the WCU on main tables are fine
+### DynamoDB - PartiQL
+- SQL like syntax to manipulate DYnamoDB Tables
+### OPtimistic Locking
+- DynamoDB has a feature called Contional Writes
+- Each item has an attribute that acts as a version number 
+### DynamoDB Accelerator(DAX)
+- FUlly managed, highly available, in-memory cache for DynamoDB
+- Solves the Hot Key problem(too many reads)
+- 5 min TTL for cache
+- Multi-AZ
+### DAX vs ElastiCAche
+- Store aggregation result in ElastiCache
+- Indivicual object, query & scan cache in DAX
+### DynamoDB Streams
+- Ordered steam of itme-level modifications ina table
+- Stream recofds can be
+  - Send to Kinessis Data Streams
+  - Read by AWS Lambda
+  - Read by Kinesis Client Library applications
+### DynamoDB - Time To Live(TTL)
+- Automatically delete itmes after anexpirey timestamp
+- Doesn't consume any WCU
+- TTL attribute must be a number data type with Unix Epoch timestamp
+- Expired item deleted within 48 hours of expiration
+- Expired items, that haven't been deleted apperas in read/quries/scans, filter them out if not required
+- Expired items are deleted from both LSIs and GSIs
+### DynamoDB - Transactions
+- ACID
+- Consumes 2XWCUs & RCUs
+- Eg : 3 Transaction writes per second with item size 5kb : 3*2*(5kb/1kb) = 30 WCUs
+- Eg : 5 Transaction reads per second with item size 5kb : 5*2*(8kb(rounded)/4kb) = 20 RCU 
+### Security & other features
+- Security : Encryption at rest using AWS KMS and in-transit using SSL/TLS
+- DynamoDB Local : Develp and test apps locally without accessing DynamoDB 
