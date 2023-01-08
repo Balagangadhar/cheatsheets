@@ -358,4 +358,82 @@ TBD
 - You must use the CloudWatch Logs API
   - associate-kms-ke : if the log group alredy exists
   - create-log-group : if the log group doesnt exist yet
-- 
+## AWS Lambda
+- No servers to manage, limited by time, run on-demand, scaling is automated
+- Increasing RAM will also improve CPU and network
+### Lambda - Synchronouse Invocations
+- CLI, SDK, API Gateway, ALB
+- Results are returned right away
+- Error handling must happen at client side(retries, exponential backoff etc...)
+- Lambda@Edge : Implement request filtering before reaching your application
+### Lambda - Asynchronouse Invocation
+- S3, SNS, CloudWatch Events
+- Events are placed in an Event Queue
+- Lambda attempts to retry on errors
+  - 3 tries total 
+  - 1 min wait after st and then 2 min wait
+ - Make sure the processing is idempotent 
+ - If the function is retries, you can see duplicate log entries in CloudWatch Logs
+ - DLQ(deal-letter queue) for failed processing
+- By default if function returns an error, entire batch is reprocessed until the function succeeds, or the items in the batch expire 
+- Grants the Lambda function permissions to AWS services, sample managed policies for Lambda: AWSLambdaBasicExecutionROle : Upload logs to CloudWAtch, AWSLambdaKinessExecutionROle : Read from Kinesis
+- Best practice: Create one Lambda Execution role per function 
+- BY default, lambda function is launched outside your own VPC, hence it cannot access resources in your VPC, you must define VPC ID, subnet and security groups. Role : AWSLambdaVPCAccessExecutionROle 
+- Lambda FUnction COfnigruation :RAM
+  - 128MB to 10GB in 1MB increments
+  - The more RAM, more vCPU you get
+  - Default timeout is 3 seconds, max is 900 sec or 15 min 
+- Lambda Execution Context
+  - Temporary runtime environment, great for database connections, https clients, sdk clients
+  - Execution context includes /tmp director 
+  - Initialize outside the handler
+- Lambda /tmp space
+  - If Lambda needs to download a bigfilre to work, you can use /tmp 
+  - Max size is 10GB 
+  - FOr permanenet persistence of object, use s3
+- Lambda Concurrentcy and Throttling
+  - Limit 1000 concurrent executions
+  - Can set a reserved concurrency, each invocation over the reserved limit, triggers a Throttle
+  - If synchronouse invocation : throttle returns ThrottleError - 429 
+  - If async : retry automatically and then go to DLQ
+  - For higher limit, open a support ticket 
+  - If you don't reserve, all 1000 executions might be consumed by one service for eg ALB, and other would get throggle error
+ - Cold Starts & Provisioned Concurrency 
+  - Cold Start : Code is loaded and code ouside the handler run, if the init is large, it can take some time, hence first request server by new instances have higher latency than the rest 
+  - Provisioned Concurrency : Concurrency is allocated before the function is invocated, so the cold start never happens and all invocations have low latency 
+- Lambda FUnction Dependencies
+  - If lamdba depends on externa libraries, need to install packages alongside your code and zit it together
+  - Upload the zip to lambda if less than 50MB else to S3 first
+  - AWS SDK comes by default with every Lambda function 
+- Lambda and CloudFormation - inline 
+  - Use Code.ZipFIle property for inline code 
+  - You cannot include function dependencies with inline functions 
+- Lambda and CloudFormation through S3
+  - Store Lambda zip in s3, must refer s3 zip location in CloudFormation code under code.S3Bucket, Code.S3Key, Code.S3ObjectVErsion
+- Lambda Layers
+  - An archive containing additional code, such as libraries, dependencies, or even custom runtimes
+- Lambda Container Images
+  - Deploy Lambda function as container images of up to 10GB from ECR
+  - Can create your own image as long as it implements the Lambda RUntime API 
+  - Test the containers locally using th Lambda RUntime Interface EMulator
+- Lambda Versions
+  - When yo work on a Lambda function, it will be on $LATEST
+  - When we're ready to publish a Lambda funciton, we create a version
+  - Versions are immutable
+  - Versions have increasing version numbers and they get their own ARC(Amazon Resource Name) 
+  - Version = Code+COnfiguration(Nothing can be changed- immutable) 
+  - Each version of the Lambda function can be accessed
+ - Lambda Aliases
+   - Aliases are points to Lambda function verions 
+   - We can define dev, test, prod aliases have them point at different lambda versions
+   - Aliases are mutable
+   - Alisases enable Blue/Green deployment by assigning weghts to Lambda functions
+   - Aliases cannot reference aliases 
+- Lambda & CodeDeploy 
+  - CodeDeploy can help automatic traffic shift for Lambda aliases 
+  - Feature is integrated within the SAM framework 
+  - Linear, Canary, AllAtOnce
+ - Best practices
+   - Connec to databses or initialize SDK, pull dependencies outside of your function handler
+   - Minized deployment package size, use layers where necessary
+   - Avlid using recursive code, never have a Lambda function call itself 
