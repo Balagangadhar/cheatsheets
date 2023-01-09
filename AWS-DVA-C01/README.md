@@ -627,4 +627,9 @@ TBD
 - /tmp storage : 512MB to 10GB
 - Invocation requests per function per Region : 10 req per sec(sync), unlimited(for async)
 ## Dynamo DB
-- item size limit: 400KB, 
+- item size limit: 400KB
+## SQS
+- Max time msgs live : 14 days
+- Max idle time : 30 consecutive days(queue might be deleted)
+## RDS
+- Total instance storage : 3TB
