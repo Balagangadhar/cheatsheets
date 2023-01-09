@@ -237,6 +237,47 @@ Securtiy gruops act like firewall on EC2 instances.
 - DX, establish a physical connection between on-premise and AWS, connection is private, tkes at least a month to establish 
 ## S3
 TBD
+## Container Section
+### ECS(Elastic Container Service)
+#### EC2 Launch Type
+- Launches ECS tasks on ECS cluster
+- Must provision infrastructure(EC2 instances)
+- Must run ECS Agent to register in the EC2 instances 
+- AWS takes care of Starting and stopping EC2 instances
+#### Fargate Launch Type
+- Launch Docker containers on AWS
+- Serverless
+- TO scale, need to increase number of tasks
+### Data VOlumes
+- Mound EFS file systems onto ECS tasks
+### ECS Service Auto Scaling
+- Target Tracking
+- Step Scaling
+- Scheduled Scaling
+### Task Placement
+- Task palcement strategies
+  - binpack : Placed on the least available amount of CPU and memory, cost saving, minimizes no.of EC2 instance usage 
+  - random : Placed randomly 
+  - spread : Spread based on specific value, for eg. instanceid,attribute etc 
+- Task palcement constraints
+  - distictinstance
+  - memberof 
+### EKS
+- Way to launch Amazon Kubernetes cluster
+- Usecase: If infra is already on kubernetes, can use EKS for aws migration
+## Elastic Beanstalk
+- Managed service, automatically provisions, auto scales, load balances etc
+- Its free but pay for underlying services
+- Full control over configuration
+### Elastic Deployment Options
+- All at once
+- Rolling
+- Rolling with additional batches
+- Immutable
+#### Elastic Beanstalk Blue/Green Deployment
+- Not a direction feature
+- Create a new stage, deploy v2 on this, can validate gree deployment independently
+- Once validated, can use Route53 weighted policies to route traffic. Once done swap the urls
 ## AWS CICD
 ### CodeCommit
 - Version control
@@ -338,10 +379,10 @@ TBD
 - Create a volume from the snapshot 
 #### S3 Encryption for Objects
 - There are 4 mthods of encrypting Objects in S3
-  - SSE-S3 : Encrypts S3 objects using keys handled & managed by AWS
-  - SSE-KMS : Leverage AWS Key Management Service to manage encryption keys 
-  - SSE-C: When you want to manage your own ecryption keys
-  - Client Side Encryption 
+  - SSE-KMS : Leverage AWS Key Management Service to manage encryption keys : Max size 4kb 
+  - SSE-S3 : Encrypts S3 objects using keys handled & managed by AWS : Needs permission on GetDAtaGenerateKey to encrypt and decrypt permissiont to decrypt, calls KMS API, charges apply for calling KMS api 
+  - SSE-C: When you want to manage your own ecryption keys, upload keys 
+  - Client Side Encryption : Only AWS SDK supports this, encryption and key management happens at client side
 ### SSM Parameter Store
 - Secure storage for configuration and secrets
 - Serverless, scalable, durable, easy SDK, version tracking of configuration/secrts
