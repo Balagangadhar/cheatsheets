@@ -74,7 +74,8 @@ It mainly consists in the capability of :
 - Typical usecases of user data are
   - Installing updates
   - Installing software
-- EC2 user data script runs with the root user 
+- EC2 userdata : Launch script of EC2 instance 
+- EC2 metadata : Info about the EC2 instance
 ### EC2 Instance Types  
 AWS has folliwng naming convension  
 ```m5.2xlarge``` where  m: instance class,  5: generation, 2xlarge: Size within the instance class 
