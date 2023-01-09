@@ -502,7 +502,7 @@ TBD
   Consistent Read
   - Strongly consistent : If we read just after a write, we get correct data, set consisten read to true, consumes twice RCU
   - Eventually Consistent Read(Default) : If we read just after write, we may get stale data because of replication
-  - One RCU represents 1 strongly consistent or 1 eventually consistent reads per seconf for item utp 4KB 
+  - One RCU represents 1 strongly consistent or 2 eventually consistent reads per seconf for item utp 4KB 
   - Eg : 10 strongly consistent reads per secon with item size 4KB, 10*(4KB/4KB) = 10 RCUs
   - Eg : 10 Strongly Consistent Reads per second, with item size 6 KB  then 10* 1*(8kb 6kb is round off up to 8kb)/(4kb) = 20 RCUs
 ### Partiioneds Internal
