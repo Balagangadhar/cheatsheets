@@ -617,3 +617,14 @@ TBD
 - Fully managed resource discovery service 
 ### AWS Fault Injection SImulator(FIS)
 - Managed service for running fault injection experiments on AWS workloads
+
+# Limits
+## AWS Lambda
+- Memory : 128 MB to 10,240 MB, in 1-MB increments
+- Function timeout : 3sec default, 900(15 min)
+- Environemnt variables : 4 KB, for all environment variables associated with the function, in aggregate
+- Deployment Package Size : 50MB(Unzipped, direct upload), 250(unzipped), 3MB via console editor
+- /tmp storage : 512MB to 10GB
+- Invocation requests per function per Region : 10 req per sec(sync), unlimited(for async)
+## Dynamo DB
+- item size limit: 400KB, 
